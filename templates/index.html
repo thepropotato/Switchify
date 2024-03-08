@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Login to Switchify</title>
+    <link rel="icon" type="x-icon" href="Switchify.ico">
+    <meta charset="UTF-8">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@200..900&display=swap" rel="stylesheet">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@400..900&family=Unbounded:wght@200..900&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            background: linear-gradient(to left, #1f1f1f, #000000);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .circle {
+            position: absolute;
+            border-radius: 50%;
+            transform-origin: center;
+            animation: pulse 2s infinite alternate;
+            z-index: -1;
+        }
+
+        .circle1 {
+            border: 2px solid plum;
+            width: 1000px;
+            height: 1000px;
+            top: 50%;
+            left: 50%;
+            margin-top: -500px; /* Half of the height */
+            margin-left: -500px; /* Half of the width */
+        }
+
+        .circle2 {
+            border: 2px solid rgb(193, 225, 127);
+            width: 800px;
+            height: 800px;
+            top: 50%;
+            left: 50%;
+            margin-top: -400px; /* Half of the height */
+            margin-left: -400px; /* Half of the width */
+        }
+
+        @keyframes pulse {
+            to {
+                transform: scale(1.2);
+            }
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+        }
+
+        .title {
+            margin-top: 10px;
+            margin-bottom: 10px;
+            font-size: 100px;
+            font-family: "unbounded", Arial, Helvetica, sans-serif;
+            color: rgb(197, 194, 194); /* Set the default color to white */
+        }
+
+        .title::first-letter {
+            color: #28842b; /* Set the color for the first letter to green */
+        }
+
+        .y {
+            color: rgb(184, 30, 30);
+        }
+
+        .desc {
+            display: block;
+            text-align: center;
+            font-family: 'Gabarito';
+            opacity: 0;
+            animation: fade-in 1s ease-out forwards;
+            animation-delay: 1.2s;
+            margin-bottom: 80px;
+        }
+
+        @keyframes fade-in {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .login-button {
+            width: 200px;
+            height: 40px;
+            margin: 0 auto;
+            align-items: center;
+            display: block;
+            font-family: 'Gabarito', Arial, Helvetica, sans-serif;
+            font-size: medium;
+            color: black;
+            background-color: #28842b;
+            border-radius: 10px;
+            border-width: 10px;
+            border-color: #28842b;
+            border-style: none;
+            font-weight: bold;
+            transition: color 0.15s, background-color 0.15s, border-color 0.15s;
+            text-decoration: none;
+            text-align: center;
+            padding-top: 15px;
+        }
+
+        .login-button:hover {
+            width: 200px;
+            height: 40px;
+            cursor: pointer;
+            color: rgb(198, 37, 37);
+            background-color: rgba(247, 243, 243, 0.99);
+            border-color: rgba(247, 243, 243, 0.96);
+            padding-top: 15px;
+            text-align: center;
+        }
+    </style>
+
+    <title>Login</title>
+</head>
+
+<body>
+    <div>
+        <div class="circle circle1"></div>
+        <div class="circle circle2"></div>
+        <h1 class="title" id="typing-text"></h1>
+        <p class="desc" id="description">Because, Spotify has lost its groove and is now playing a tuneless melody ! <br><br>Use Switchify to copy your playlist from Spotify to Youtube Music. <br>And start grooving again. (Ps : Youtube has almost all tracks)</p>
+        <a class="login-button" onmouseover="changeText(this)" onmouseleave="resetText(this)" onclick="openLogin()">Switch to Youtube Music</a>
+    </div>
+
+    
+
+    <script>
+
+        function openLogin() {
+            // Redirect to the Spotify authorization URL in the same window
+            window.location.href = "https://accounts.spotify.com/en/authorize?client_id=27301e2211b74792a852693dd9cc95bc&response_type=code&redirect_uri=https%3A%2F%2Fswitchifytm.web.app%2Fcallback&scope=playlist-read-private+playlist-read-collaborative&show_dialog=True";
+        }
+
+        function changeText(button) {
+            button.innerHTML = 'Login to Spotify';
+        }
+
+        function resetText(button) {
+            button.innerHTML = "Switch to Youtube Music";
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const textElement = document.getElementById('typing-text');
+            const descElement = document.getElementById('description');
+            const textToType = 'Switchify';
+            let index = 0;
+
+            function typeText() {
+                textElement.textContent = textToType.slice(0, index);
+                index++;
+
+                if (index <= textToType.length) {
+                    setTimeout(typeText, 100); // Adjust the typing speed here (milliseconds)
+                } else {
+                    // Once typing animation is complete, reveal the description
+                    descElement.classList.add('desc');
+                    // Set the color of the last letter in red
+                    const titleText = document.querySelector('.title');
+                    const lastLetter = titleText.textContent.slice(-1);
+                    titleText.innerHTML = titleText.innerHTML.replace(lastLetter, `<span class="y";">${lastLetter}</span>`);
+                }
+            }
+
+            typeText();
+        });
+    </script>
+</body>
+</html>
