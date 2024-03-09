@@ -13,7 +13,7 @@ import time
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
 
-socketio = SocketIO(app, async_mode=None, engineio_logger=True)
+socketio = SocketIO(app, async_mode=None, engineio_logger=True, secure=True)
 
 # Replace these values with your own
 client_id = '27301e2211b74792a852693dd9cc95bc'
