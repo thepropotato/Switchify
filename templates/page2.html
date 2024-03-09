@@ -203,23 +203,29 @@
             songTiles.forEach(function (tile) {
                 fullSongTitles.push(tile.getAttribute('data-full-title'));
             });
-
+        
             var progressBar = document.getElementById('copyProgress');
             progressBar.value = 0;
             progressBar.max = fullSongTitles.length;
-
+        
+            // Open a new window for the authentication URL
+            var authWindow = window.open('/copy-playlist', 'SwitchifyAuthWindow', 'width=600,height=600');
+            
             var xhr = new XMLHttpRequest();
             xhr.open('POST', '/copy-playlist', true);
             xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-
+        
             xhr.onreadystatechange = function () {
                 if (xhr.readyState == 4 && xhr.status == 200) {
                     alert(xhr.responseText);
+                    // Close the authentication window after the process is complete
+                    authWindow.close();
                 }
             };
-
+        
             xhr.send(JSON.stringify({ selected_playlist: selectedPlaylist, songs: fullSongTitles }));
         }
+
 
         function changeText(button) {
             button.innerHTML = 'Adiós Spotify !';
