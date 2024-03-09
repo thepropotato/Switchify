@@ -70,7 +70,7 @@ def authenticate():
 
     # Set up OAuth credentials
     flow = InstalledAppFlow.from_client_config(client_secret, SCOPES)
-    credentials = flow.run_console()
+    credentials = flow.run_local_server()
 
     # Build the YouTube API client
     youtube = build(API_SERVICE_NAME, API_VERSION, credentials=credentials)
