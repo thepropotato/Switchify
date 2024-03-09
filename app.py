@@ -65,7 +65,7 @@ def authenticate():
             "token_uri": "https://oauth2.googleapis.com/token",
             "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
             "client_secret": "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",
-            "redirect_uris": ["https://switchify-955k.onrender.com/convert"]
+            "redirect_uris": ["http://localhost"]
         }
     }
 
