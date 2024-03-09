@@ -9,7 +9,12 @@ from flask_socketio import emit
 from flask_socketio import SocketIO
 from flask import copy_current_request_context
 import time
-from flask_socketio import emit
+import google.oauth2.credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+from youtubesearchpython import VideosSearch
+import csv
+import re
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
@@ -43,13 +48,6 @@ class LoginForm(FlaskForm):
     playlist = SelectField('Select a Playlist', choices=[], coerce=str)
     convert = SubmitField('Convert')
 
-import os
-import google.oauth2.credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
-from youtubesearchpython import VideosSearch
-import csv
-import re
 
 # Set up the OAuth flow for the first time
 SCOPES = ["https://www.googleapis.com/auth/youtube.force-ssl"]
