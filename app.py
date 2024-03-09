@@ -13,7 +13,7 @@ import time
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
 
-socketio = SocketIO(app, async_mode=None, engineio_logger=True)
+socketio = SocketIO(app, async_mode=None, engineio_logger=True, secure=True)
 
 # Replace these values with your own
 client_id = '27301e2211b74792a852693dd9cc95bc'
@@ -65,7 +65,7 @@ def authenticate():
             "token_uri": "https://oauth2.googleapis.com/token",
             "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
             "client_secret": "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",
-            "redirect_uris": ["http://localhost"]
+            "redirect_uris": ["http://localhost", "https://localhost", "https://switchifytm.onrender.com"]
         }
     }
 
