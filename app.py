@@ -65,7 +65,7 @@ def authenticate():
     "token_uri":"https://oauth2.googleapis.com/token",
     "auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs",
     "client_secret":"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",
-    "redirect_uris":["https://switchifytm.onrender.com","https://switchifytm.onrender.com/copy-playlist"]}
+    "redirect_uris":["https://switchifytm.onrender.com", "https://switchifytm.onrender.com/copy-playlist", "https://switchifytm.onrender.com/convert"]}
     }
 
     # Set up OAuth credentials
