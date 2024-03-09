@@ -9,6 +9,7 @@ from flask_socketio import emit
 from flask_socketio import SocketIO
 from flask import copy_current_request_context
 import time
+from flask_socketio import emit
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
@@ -312,9 +313,10 @@ def convert():
     # Render the template with the selected playlist and songs
     return render_template('page2.html', selected_playlist=selected_playlist, songs=songs)
 
-
-
-from flask_socketio import emit
+@app.errorhandler(Exception)
+def handle_error(e):
+    app.logger.error(f"An error occurred: {str(e)}")
+    return 'Internal Server Error', 500
 
 @app.route('/copy-playlist', methods=['POST'])
 def copy_playlist_route():
