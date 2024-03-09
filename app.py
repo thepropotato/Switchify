@@ -18,7 +18,7 @@ socketio = SocketIO(app, async_mode=None, engineio_logger=True)
 # Replace these values with your own
 client_id = '27301e2211b74792a852693dd9cc95bc'
 client_secret = '8f5a80b4723c43ed850713d1b753cbb5'
-redirect_uri = 'https://switchifytm.web.app/callback'
+redirect_uri = 'https://switchify-955k.onrender.com/callback'
 
 # Set up Spotify API authentication
 sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=client_id,
