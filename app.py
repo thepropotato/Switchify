@@ -56,16 +56,16 @@ API_VERSION = "v3"
 
 def authenticate():
     # Provide your client secret directly in the code (not recommended for production)
+    
     client_secret = {
-        "installed": {
-            "client_id": "198293411953-bea77l744kbt4lvs01ptd0fpbk9d33ib.apps.googleusercontent.com",
-            "project_id": "youtube-playlist-406517",
-            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-            "token_uri": "https://oauth2.googleapis.com/token",
-            "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-            "client_secret": "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",
-            "redirect_uris": ["http://localhost", "https://localhost", "https://switchifytm.onrender.com/copy-playlist"]
-        }
+      "web":{
+    "client_id":"198293411953-86bfnt1lksb04f041erh4kn097gv2gta.apps.googleusercontent.com",
+    "project_id":"youtube-playlist-406517",
+    "auth_uri":"https://accounts.google.com/o/oauth2/auth",
+    "token_uri":"https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs",
+    "client_secret":"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",
+    "redirect_uris":["https://switchifytm.onrender.com","https://switchifytm.onrender.com/copy-playlist"]}
     }
 
     # Set up OAuth credentials
