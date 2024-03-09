@@ -314,9 +314,11 @@ def convert():
 @app.errorhandler(Exception)
 def handle_error(e):
     app.logger.error(f"An error occurred: {str(e)}")
+    # Log more details, if needed
+    app.logger.exception(e)
     return 'Internal Server Error', 500
 
-@app.route('/copy-playlist', methods=['POST'])
+@app.route('/copy-playlist', methods=['GET', 'POST'])
 def copy_playlist_route():
     # Retrieve the song titles from the AJAX request
     data = request.get_json()
