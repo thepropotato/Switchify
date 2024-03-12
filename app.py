@@ -10,7 +10,7 @@ from flask_socketio import SocketIO
 from flask import copy_current_request_context
 import time
 import google.oauth2.credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
+from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from youtubesearchpython import VideosSearch
 import csv
@@ -24,7 +24,7 @@ socketio = SocketIO(app, async_mode=None, engineio_logger=True, secure=True)
 # Replace these values with your own
 client_id = '27301e2211b74792a852693dd9cc95bc'
 client_secret = '8f5a80b4723c43ed850713d1b753cbb5'
-redirect_uri = 'https://switchifytm.onrender.com/callback'
+redirect_uri = 'http://switchifytm.onrender.com:5000/callback'
 
 # Set up Spotify API authentication
 sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=client_id,
@@ -54,28 +54,36 @@ SCOPES = ["https://www.googleapis.com/auth/youtube.force-ssl"]
 API_SERVICE_NAME = "youtube"
 API_VERSION = "v3"
 
-def authenticate():
-    # Provide your client secret directly in the code (not recommended for production)
-    client_secret = {
-        "installed": {
-            "client_id": "198293411953-bea77l744kbt4lvs01ptd0fpbk9d33ib.apps.googleusercontent.com",
+client_secrets = {
+        "web": {
+            "client_id": "198293411953-86bfnt1lksb04f041erh4kn097gv2gta.apps.googleusercontent.com",
             "project_id": "youtube-playlist-406517",
             "auth_uri": "https://accounts.google.com/o/oauth2/auth",
             "token_uri": "https://oauth2.googleapis.com/token",
             "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-            "client_secret": "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",
-            "redirect_uris": ["http://localhost"]
+            "client_secret": "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",
+            "redirect_uris": ["https://switchifytm.onrender.com/youtube-auth"],
+            "javascript_origins": ["https://switchifytm.onrender.com"]
         }
     }
 
-    # Set up OAuth credentials
-    flow = InstalledAppFlow.from_client_config(client_secret, SCOPES)
-    credentials = flow.run_local_server(port=5000)
+def authenticate():
+    # Set up OAuth credentials using Web server flow
+    flow = Flow.from_client_config(client_secrets, SCOPES)
+    flow.redirect_uri = "https://switchifytm.onrender.com/copy-playlist"
 
-    # Build the YouTube API client
-    youtube = build(API_SERVICE_NAME, API_VERSION, credentials=credentials)
-    return youtube
+    # Generate the authorization URL
+    authorization_url, _ = flow.authorization_url(prompt='consent')
+    session['auth_url'] = authorization_url
 
+    return authorization_url
+
+# New route for YouTube authentication and playlist creation
+@app.route('/youtube-auth', methods=['GET'])
+def youtube_auth():
+    # Get the authorization URL
+    auth_url = authenticate()
+    return redirect(auth_url)
 
 def create_playlist(youtube, name):
     request = youtube.playlists().insert(
@@ -94,6 +102,56 @@ def create_playlist(youtube, name):
     playlist_id = response["id"]
     print(f"Playlist created! ID: {playlist_id}")
     return playlist_id
+
+@app.route('/copy-playlist', methods=['GET', 'POST'])
+def copy_playlist_route():
+    # Retrieve the song titles from the AJAX request
+    print("COPY PLAYLIST ROUTE TRIGGERED")
+
+    # Retrieve the authorization URL from the session
+    auth_url = session.pop('auth_url', None)
+
+    if auth_url is None:
+        return jsonify({"error": "Authorization URL not found"})
+
+    # Retrieve the authorization code from the callback URL
+    authorization_response = request.args.get('code')
+    print(authorization_response)
+
+    if authorization_response is None:
+        return jsonify({"error": "Authorization code not provided"})
+
+    # Set up OAuth credentials using Web server flow
+    flow = Flow.from_client_config(client_secrets, SCOPES)
+    flow.redirect_uri = "https://switchifytm.onrender.com/copy-playlist"
+
+    
+    flow.fetch_token(authorization_response=authorization_response)
+
+    # Build the YouTube API client
+    youtube = build(API_SERVICE_NAME, API_VERSION, credentials=flow.credentials)
+    print(youtube)
+
+    data = request.get_json()
+    song_titles = data.get('songs', [])
+    selected_playlist = data.get('selected_playlist', '')
+    
+    print("Received Song Titles:", song_titles)
+    pid = create_playlist(youtube, selected_playlist)
+
+    # Emit initial message
+    socketio.emit('copy_playlist_message', {'message': 'Copying playlist...'}, namespace='/')
+
+    # Simulate a long-running process (replace this with your actual copy_playlist() logic)
+    for title in song_titles:
+        print(f"Copying song: {title}")
+        copy_playlist_by_song(youtube, title, pid)
+        socketio.emit('copy_playlist_message', {'message': f"Copying: {title}"}, namespace='/')
+        time.sleep(1)  # Add a short delay to simulate processing time
+
+    socketio.emit('copy_playlist_message', {'message': 'Playlist copied successfully!'}, namespace='/')
+
+    return jsonify({"Copy status": "Playlist copied successfully!"})
 
 def extract_video_id(link):
     # Extract the video ID from a YouTube link
@@ -317,32 +375,6 @@ def handle_error(e):
     # Log more details, if needed
     app.logger.exception(e)
     return 'Internal Server Error', 500
-
-@app.route('/copy-playlist', methods=['GET', 'POST'])
-def copy_playlist_route():
-    # Retrieve the song titles from the AJAX request
-    data = request.get_json()
-    song_titles = data.get('songs', [])
-    selected_playlist = data.get('selected_playlist', '')
-    
-    print("Received Song Titles:", song_titles)
-    youtube = authenticate()
-    pid = create_playlist(youtube, selected_playlist)
-
-    # Emit initial message
-    socketio.emit('copy_playlist_message', {'message': 'Copying playlist...'}, namespace='/')
-
-    # Simulate a long-running process (replace this with your actual copy_playlist() logic)
-    for title in song_titles:
-        print(f"Copying song: {title}")
-        copy_playlist_by_song(youtube, title, pid)
-        socketio.emit('copy_playlist_message', {'message': f"Copying: {title}"}, namespace='/')
-        time.sleep(1)  # Add a short delay to simulate processing time
-
-    socketio.emit('copy_playlist_message', {'message': 'Playlist copied successfully!'}, namespace='/')
-
-    return jsonify({"Copy status": "Playlist copied successfully!"})
-
 
 
 if __name__ == "__main__":
