@@ -78,7 +78,7 @@ def authenticate():
     # Redirect to the authorization URL
     return redirect(authorization_url)
 
-@app.route('/copy-playlist', methods=['GET', 'POST'])
+@app.route('/copy-playlist', methods=['GET'])
 def copy_playlist_route():
     # Retrieve the song titles from the AJAX request
     print("COPY PLAYLIST ROUTE TRIGGERED")
