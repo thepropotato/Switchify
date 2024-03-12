@@ -172,69 +172,65 @@
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
     <script>
-        var socket = io.connect('http://' + document.domain + ':' + location.port + '/');  // Include the namespace '/'
-
-        // Add this function to handle incoming messages
+        var socket = io.connect('http://' + document.domain + ':' + location.port + '/');
+    
         socket.on('copy_playlist_message', function(msg) {
             console.log(msg.message);
-
-            // Update your webpage with the message, e.g., append it to a div with id 'console-log'
+    
             var consoleLogDiv = document.getElementById('console-log');
             if (consoleLogDiv) {
                 consoleLogDiv.innerHTML += '<p>' + msg.message + '</p>';
                 if (msg.message !== "Copying playlist...") {
-                updateProgressBar();
+                    updateProgressBar();
                 }
             }
         });
-
+    
         function updateProgressBar() {
             var progressBar = document.getElementById('copyProgress');
             progressBar.value += 1;
-
-            // Scroll the message box to the bottom
+    
             var consoleLogDiv = document.getElementById('console-log');
             consoleLogDiv.scrollTop = consoleLogDiv.scrollHeight;
         }
-
+    
         function copyPlaylist(selectedPlaylist) {
             var fullSongTitles = [];
             var songTiles = document.querySelectorAll('.song-tile');
             songTiles.forEach(function (tile) {
                 fullSongTitles.push(tile.getAttribute('data-full-title'));
             });
-        
+
             var progressBar = document.getElementById('copyProgress');
             progressBar.value = 0;
             progressBar.max = fullSongTitles.length;
-        
-            // Open a new window for the authentication URL
-            var authWindow = window.open('/copy-playlist', 'SwitchifyAuthWindow', 'width=600,height=600');
-            
+
+            // Redirect to the authentication URL
+            window.location.href = '/youtube-auth';
+
             var xhr = new XMLHttpRequest();
             xhr.open('POST', '/copy-playlist', true);
             xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-        
+
             xhr.onreadystatechange = function () {
                 if (xhr.readyState == 4 && xhr.status == 200) {
                     alert(xhr.responseText);
-                    // Close the authentication window after the process is complete
-                    authWindow.close();
+                    // No need to close the authentication window since it's the same window
                 }
             };
-        
+
             xhr.send(JSON.stringify({ selected_playlist: selectedPlaylist, songs: fullSongTitles }));
         }
 
-
-
+    
         function changeText(button) {
             button.innerHTML = 'Adiós Spotify !';
         }
-
+    
         function resetText(button) {
             button.innerHTML = "Login and Copy Playlist";
         }
     </script>
+    
 </body>
 </html>
