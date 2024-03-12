@@ -62,7 +62,7 @@ client_secrets = {
             "token_uri": "https://oauth2.googleapis.com/token",
             "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
             "client_secret": "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",
-            "redirect_uris": ["https://switchifytm.onrender.com/youtube-auth"],
+            "redirect_uris": ["https://switchifytm.onrender.com/copy-playlist-callback"],
             "javascript_origins": ["https://switchifytm.onrender.com"]
         }
     }
@@ -70,20 +70,59 @@ client_secrets = {
 def authenticate():
     # Set up OAuth credentials using Web server flow
     flow = Flow.from_client_config(client_secrets, SCOPES)
-    flow.redirect_uri = "https://switchifytm.onrender.com/copy-playlist"
+    flow.redirect_uri = "https://switchifytm.onrender.com/copy-playlist-callback"
 
     # Generate the authorization URL
     authorization_url, _ = flow.authorization_url(prompt='consent')
-    session['auth_url'] = authorization_url
 
-    return authorization_url
+    # Redirect to the authorization URL
+    return redirect(authorization_url)
 
-# New route for YouTube authentication and playlist creation
-@app.route('/youtube-auth', methods=['GET'])
-def youtube_auth():
-    # Get the authorization URL
-    auth_url = authenticate()
-    return redirect(auth_url)
+@app.route('/copy-playlist', methods=['GET', 'POST'])
+def copy_playlist_route():
+    # Retrieve the song titles from the AJAX request
+    print("COPY PLAYLIST ROUTE TRIGGERED")
+
+    # Redirect to the authorization URL
+    auth_redirect = authenticate()
+    return auth_redirect
+
+@app.route('/copy-playlist-callback', methods=['GET'])
+def copy_playlist_callback():
+    # Retrieve the authorization code from the callback URL
+    authorization_response = request.args.get('code')
+
+    # Set up OAuth credentials using Web server flow
+    flow = Flow.from_client_config(client_secrets, SCOPES)
+    flow.redirect_uri = "https://switchifytm.onrender.com/copy-playlist-callback"
+
+    # Exchange the authorization code for credentials
+    flow.fetch_token(authorization_response=authorization_response)
+
+    # Build the YouTube API client
+    youtube = build(API_SERVICE_NAME, API_VERSION, credentials=flow.credentials)
+
+    # Continue with the playlist copying logic...
+    data = request.get_json()
+    song_titles = data.get('songs', [])
+    selected_playlist = data.get('selected_playlist', '')
+
+    print("Received Song Titles:", song_titles)
+    pid = create_playlist(youtube, selected_playlist)
+
+    # Emit initial message
+    socketio.emit('copy_playlist_message', {'message': 'Copying playlist...'}, namespace='/')
+
+    # Simulate a long-running process (replace this with your actual copy_playlist() logic)
+    for title in song_titles:
+        print(f"Copying song: {title}")
+        copy_playlist_by_song(youtube, title, pid)
+        socketio.emit('copy_playlist_message', {'message': f"Copying: {title}"}, namespace='/')
+        time.sleep(1)  # Add a short delay to simulate processing time
+
+    socketio.emit('copy_playlist_message', {'message': 'Playlist copied successfully!'}, namespace='/')
+
+    return jsonify({"Copy status": "Playlist copied successfully!"})
 
 def create_playlist(youtube, name):
     request = youtube.playlists().insert(
@@ -103,55 +142,6 @@ def create_playlist(youtube, name):
     print(f"Playlist created! ID: {playlist_id}")
     return playlist_id
 
-@app.route('/copy-playlist', methods=['GET', 'POST'])
-def copy_playlist_route():
-    # Retrieve the song titles from the AJAX request
-    print("COPY PLAYLIST ROUTE TRIGGERED")
-
-    # Retrieve the authorization URL from the session
-    auth_url = session.pop('auth_url', None)
-
-    if auth_url is None:
-        return jsonify({"error": "Authorization URL not found"})
-
-    # Retrieve the authorization code from the callback URL
-    authorization_response = request.args.get('code')
-    print(authorization_response)
-
-    if authorization_response is None:
-        return jsonify({"error": "Authorization code not provided"})
-
-    # Set up OAuth credentials using Web server flow
-    flow = Flow.from_client_config(client_secrets, SCOPES)
-    flow.redirect_uri = "https://switchifytm.onrender.com/copy-playlist"
-
-    
-    flow.fetch_token(authorization_response=authorization_response)
-
-    # Build the YouTube API client
-    youtube = build(API_SERVICE_NAME, API_VERSION, credentials=flow.credentials)
-    print(youtube)
-
-    data = request.get_json()
-    song_titles = data.get('songs', [])
-    selected_playlist = data.get('selected_playlist', '')
-    
-    print("Received Song Titles:", song_titles)
-    pid = create_playlist(youtube, selected_playlist)
-
-    # Emit initial message
-    socketio.emit('copy_playlist_message', {'message': 'Copying playlist...'}, namespace='/')
-
-    # Simulate a long-running process (replace this with your actual copy_playlist() logic)
-    for title in song_titles:
-        print(f"Copying song: {title}")
-        copy_playlist_by_song(youtube, title, pid)
-        socketio.emit('copy_playlist_message', {'message': f"Copying: {title}"}, namespace='/')
-        time.sleep(1)  # Add a short delay to simulate processing time
-
-    socketio.emit('copy_playlist_message', {'message': 'Playlist copied successfully!'}, namespace='/')
-
-    return jsonify({"Copy status": "Playlist copied successfully!"})
 
 def extract_video_id(link):
     # Extract the video ID from a YouTube link
