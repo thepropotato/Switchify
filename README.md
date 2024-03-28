@@ -58,7 +58,7 @@ Also, in the logo of the site (in the landing page), you can find the color of *
 
 # Queries and Feedback
 
-For any Queries and feedback please mail me at notvenupulagam1234@gmail.com
+For any Queries and feedback please mail me at notvenupulagam@gmail.com
 
 **Welcome to the Community.**
 
