@@ -89,40 +89,46 @@ def copy_playlist_route():
 
 @app.route('/copy-playlist-callback', methods=['GET'])
 def copy_playlist_callback():
-    # Retrieve the authorization code from the callback URL
-    authorization_response = request.args.get('code')
+    try:
+        # Retrieve the authorization code from the callback URL
+        authorization_response = request.args.get('code')
+        print("Authorization code:", authorization_response)
 
-    # Set up OAuth credentials using Web server flow
-    flow = Flow.from_client_config(client_secrets, SCOPES)
-    flow.redirect_uri = "https://switchifytm.onrender.com/copy-playlist-callback"
+        # Set up OAuth credentials using Web server flow
+        flow = Flow.from_client_config(client_secrets, SCOPES)
+        flow.redirect_uri = "https://switchifytm.onrender.com/copy-playlist-callback"
 
-    # Exchange the authorization code for credentials
-    flow.fetch_token(authorization_response=authorization_response)
+        # Exchange the authorization code for credentials
+        flow.fetch_token(authorization_response=authorization_response)
 
-    # Build the YouTube API client
-    youtube = build(API_SERVICE_NAME, API_VERSION, credentials=flow.credentials)
+        # Build the YouTube API client
+        youtube = build(API_SERVICE_NAME, API_VERSION, credentials=flow.credentials)
 
-    # Continue with the playlist copying logic...
-    data = request.get_json()
-    song_titles = data.get('songs', [])
-    selected_playlist = data.get('selected_playlist', '')
+        # Continue with the playlist copying logic...
+        data = request.get_json()
+        song_titles = data.get('songs', [])
+        selected_playlist = data.get('selected_playlist', '')
 
-    print("Received Song Titles:", song_titles)
-    pid = create_playlist(youtube, selected_playlist)
+        print("Received Song Titles:", song_titles)
+        pid = create_playlist(youtube, selected_playlist)
 
-    # Emit initial message
-    socketio.emit('copy_playlist_message', {'message': 'Copying playlist...'}, namespace='/')
+        # Emit initial message
+        socketio.emit('copy_playlist_message', {'message': 'Copying playlist...'}, namespace='/')
 
-    # Simulate a long-running process (replace this with your actual copy_playlist() logic)
-    for title in song_titles:
-        print(f"Copying song: {title}")
-        copy_playlist_by_song(youtube, title, pid)
-        socketio.emit('copy_playlist_message', {'message': f"Copying: {title}"}, namespace='/')
-        time.sleep(1)  # Add a short delay to simulate processing time
+        # Simulate a long-running process (replace this with your actual copy_playlist() logic)
+        for title in song_titles:
+            print(f"Copying song: {title}")
+            copy_playlist_by_song(youtube, title, pid)
+            socketio.emit('copy_playlist_message', {'message': f"Copying: {title}"}, namespace='/')
+            time.sleep(1)  # Add a short delay to simulate processing time
 
-    socketio.emit('copy_playlist_message', {'message': 'Playlist copied successfully!'}, namespace='/')
+        socketio.emit('copy_playlist_message', {'message': 'Playlist copied successfully!'}, namespace='/')
 
-    return jsonify({"Copy status": "Playlist copied successfully!"})
+        return jsonify({"Copy status": "Playlist copied successfully!"})
+
+    except Exception as e:
+        print("Error in copy_playlist_callback:", e)
+        return jsonify({"error": str(e)})
 
 def create_playlist(youtube, name):
     request = youtube.playlists().insert(
